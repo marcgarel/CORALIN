@@ -1,0 +1,53 @@
+SampleID	Description	Treatment	SampleType	Station	Morphotype	individu	date	depth	temperature	salinity
+vmCB14S0	CB14-1-S	Healthy	HA	Ble	Mesophyllum	1	June-14	5	20	38.2
+vmCB14A0	CB14-1et2-A	Affected	A	Ble	Mesophyllum	1et2	June-14	5	20	38.2
+XlerchF11	CB14A1	Affected	A	Ble	Mesophyllum		June-14	5	20	38.2
+XlerchG11	CB14A2	Affected	A	Ble	Mesophyllum		June-14	5	20	38.2
+vmCB17S0	CB17-1et2-S	Healthy	H	Ble	Mesophyllum	1et2	May-17	5	16	38.2
+vmCB17S3	CB17-3-S	Healthy	H	Ble	Mesophyllum	3	May-17	5	16	38.2
+plaqueX-llerch96-cb17A4	CB17A4	Affected	A	Ble	Mesophyllum		May-17	5	16	38.2
+vmCB26S1	CB26-1-S	Healthy	HA	Ble	Mesophyllum	1	July-26	5		
+vmCB26S0	CB26-1et4-S	Healthy	HA	Ble	Mesophyllum	1et4	July-26	5		
+vmCB26S2	CB26-2-S	Healthy	H	Ble	Mesophyllum	2	July-26	5		
+vmCB26A0	CB26-3et4-A	Affected	A	Ble	Mesophyllum	3et4	July-26	5		
+vmCB26S4	CB26-4-S	Healthy	HA	Ble	Mesophyllum	4	July-26	5		
+XlerchH11	CB26A3	Affected	A	Ble	Mesophyllum		July-26	5		
+XlerchA12	CB26A4	Affected	A	Ble	Mesophyllum		July-26	5		
+vmCB30A11	CB30-1-A1	Affected	A	Ble	Mesophyllum	1	May-30	7	20.1	38.2
+vmCB30S1	CB30-1-S	Healthy	HA	Ble	Mesophyllum	1	May-30	7	20.1	38.2
+vmCB30S0	CB30-1et3-S	Healthy	HA	Ble	Mesophyllum	1et3	May-30	7	20.1	38.2
+XlerchC11	CB30A12	Affected	A	Ble	Mesophyllum		May-30	7	20.1	38.2
+XlerchD11	CB30A3	Affected	A	Ble	Mesophyllum		May-30	7	20.1	38.2
+XlerchE11	CB30A4	Affected	A	Ble	Mesophyllum		May-30	7	20.1	38.2
+vmCC15S0	CC15-2et3-S	Healthy	H	Contrebandier	Lithophyllum	2et3	June-15	45	16	38.4
+XlerchF12	CC15S3	Healthy	H	Contrebandier	Lithophyllum		June-15	45	16	38.4
+XlerchB12	CC25S1	Healthy	H	Contrebandier	Lithophyllum		May-25	45	16	38.4
+XlerchC12	CC25S2	Healthy	H	Contrebandier	Lithophyllum		May-25	45	16	38.4
+XlerchD12	CC25S3	Healthy	H	Contrebandier	Lithophyllum		May-25	45	16	38.4
+XlerchE12	CC25S4	Healthy	H	Contrebandier	Lithophyllum		May-25	45	16	38.4
+vmCC27S1	CC27-1-S	Healthy	H	Contrebandier	Lithophyllum	1	July-27	45	16	38.4
+vmCC27S0	CC27-1-S	Healthy	H	Contrebandier	Lithophyllum	1	July-27	45	16	38.4
+XlerchG9	CC27A2	Affected	A	Contrebandier	Lithophyllum		July-27	45	16	38.4
+XlerchH9	CC27A3	Affected	A	Contrebandier	Lithophyllum		July-27	45	16	38.4
+XlerchA10	CC27S31	Healthy	HA	Contrebandier	Lithophyllum		July-27	45	16	38.4
+XlerchB10	CC27S32	Healthy	HA	Contrebandier	Lithophyllum		July-27	45	16	38.4
+vmCG15A3	CG15-3-A	Affected	A	Gamegou	Mesophyllum	3	June-15	7.5	17	38.1
+XlerchC10	CG15A1	Affected	A	Gamegou	Mesophyllum		June-15	7.5	17	38.1
+SG-CG15A2	CG15A2	Affected	A	Gamegou	Mesophyllum		May-15	7.5	17	38.1
+SG-CG15A3	CG15A3	Affected	A	Gamegou	Mesophyllum		May-15	7.5	17	38.1
+XlerchE10	CG15A4	Affected	A	Gamegou	Mesophyllum		June-15	7.5	17	38.1
+SG-CG15S1	CG15S1	Healthy	HA	Gamegou	Mesophyllum		May-15	7.5	17	38.1
+SG-CG15S2	CG15S2	Healthy	HA	Gamegou	Mesophyllum		May-15	7.5	17	38.1
+XlerchF10	CG15S4	Healthy	HA	Gamegou	Mesophyllum		June-15	7.5	17	38.1
+vmCG25S0	CG25-1et3et4-S	Healthy	H	Gamegou	Mesophyllum	1et3et4	June-25	7.5	19	38.1
+vmCG25S5	CG25-5-S	Healthy	H	Gamegou	Mesophyllum	5	June-25	7.5	19	38.1
+vmCP12S2	CP12-2-S	Healthy	H	Pierre-Benoit	Lithophyllum	2	June-12	40	16	38.4
+XlerchH12	CP12S1	Healthy	H	Pierre-Benoit	Lithophyllum		June-12	40	16	38.4
+vmCP17S6	CP17-6-S	Healthy	H	Pierre-Benoit	Lithophyllum	6	May-17	40	15	38.4
+XlerchG12	CP17S3	Healthy	H	Pierre-Benoit	Lithophyllum		May-17	40	15	38.4
+vmCP26A3	CP26-3-A	Affected	A	Pierre-Benoit	Lithophyllum	3	July-26			
+vmCP26S0	CP26-3et4-S	Healthy	HA	Pierre-Benoit	Lithophyllum	3et4	July-26			
+XlerchH10	CP26A2	Affected	A	Pierre-Benoit	Lithophyllum		July-26	40		
+XlerchA11	CP26A4	Affected	A	Pierre-Benoit	Lithophyllum		July-26	40		
+XlerchG10	CP26S1	Healthy	H	Pierre-Benoit	Lithophyllum		July-26	40		
+XlerchB11	CP26S4	Healthy	HA	Pierre-Benoit	Lithophyllum		July-26	40		

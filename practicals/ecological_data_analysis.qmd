@@ -1,0 +1,243 @@
+---
+title: "Ecological Data Analysis"
+format: html
+---
+
+## Create Output Directories and Load Packages
+
+```{r message=FALSE}
+library(phyloseq)
+library(ggplot2)
+library(dplyr)
+source("R/beta_diversity.R")
+source("R/alpha_diversity.R")
+source("R/utils.R")
+source("R/NbClust_indexlist.R")
+```
+
+```{r}
+output_beta <- here::here("outputs", "beta_diversity")
+if (!dir.exists(output_beta)) dir.create(output_beta, recursive = TRUE)
+```
+
+## Load Data
+
+```{r}
+# Cherchez tous les fichiers .rds dans le projet
+list.files(here::here(), pattern = "\\.rds$", recursive = TRUE)
+
+# Ou cherchez spécifiquement les fichiers phyloseq
+list.files(here::here(), pattern = "phyloseq", recursive = TRUE)
+
+physeq<-readRDS(here::here("outputs", "dada2", "asv_table", "phyloseq_object.rds"))
+```
+
+```{r}
+#Chloroplast
+chloro=subset_taxa(physeq, Order=="Chloroplast")
+sample_sums(chloro@otu_table)
+
+apply(chloro@otu_table, 2, sum)
+
+#Mitochondria
+mito=subset_taxa(physeq, Family=="Mitochondria")
+sample_sums(mito@otu_table)
+apply(mito@otu_table, 2, sum)
+
+# none=subset_taxa(physeq, Family == "N.A")
+# sample_sums(NA@otu_table)
+# apply(NA@otu_table, 2, sum)
+
+# Retirer les chloroplastes et mitochondries
+physeq <- subset_taxa(physeq, !Order %in% "Chloroplast" & 
+                             !Family %in% "Mitochondria")
+```
+
+```{r}
+table(tax_table(physeq)[, "Phylum"])
+```
+
+
+```{r}
+physeq_rar <- phyloseq::rarefy_even_depth(physeq, rngseed = TRUE, sample.size = 15000)
+```
+
+
+```{r}
+p0 <- ggrare(physeq_rar, step = 10, color = "Description", se = TRUE)
+p0 + ggtitle("Rarefaction Curves")
+```
+
+## Relative Abundance at Phylum Level
+```{r}
+physeq_rar_rel <- microbiome::transform(physeq_rar, "compositional")
+
+#filtration des phyla rares (<0.1% dans au moins un échantillon)
+physeq_rar_rel <- phyloseq::filter_taxa(physeq_rar_rel, 
+                                           function(x) max(x) > 0.001, 
+                                           prune = TRUE)
+
+phylum<-microbiome::aggregate_taxa(physeq_rar_rel, "Phylum")
+
+n_phyla <- length(unique(tax_table(phylum)[, "Phylum"]))
+print(paste("Nombre de phyla:", n_phyla))
+
+
+# Option 1: Combinaison de plusieurs palettes RColorBrewer
+library(RColorBrewer)
+color <- c(
+  brewer.pal(12, "Set3"),
+  brewer.pal(8, "Set2"),
+  brewer.pal(9, "Set1"),
+  brewer.pal(8, "Pastel2"),
+  brewer.pal(9, "Pastel1"),
+  brewer.pal(5, "Dark2")
+)
+# Prendre seulement le nombre nécessaire
+color <- color[1:n_phyla]
+
+microbiome::plot_composition(phylum, 
+                           otu.sort = "abundance", 
+                           x.label = "Samples", 
+                           y.label = "Relative Abundance", 
+                           legend.title = "Phylum", 
+                           group_by = "Station") +
+  scale_fill_manual(values = color) +
+  ggtitle("Relative Abundance at Phylum Level")
+```
+
+```{r}
+# Calculer le nombre d'ASV assignées à chaque niveau taxonomique
+tax_stats <- data.frame(
+  Niveau = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+  Total_ASV = ntaxa(physeq_rar_rel),
+  ASV_assignees = c(
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Kingdom"]) & tax_table(physeq_rar_rel)[, "Kingdom"] != ""),
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Phylum"]) & tax_table(physeq_rar_rel)[, "Phylum"] != ""),
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Class"]) & tax_table(physeq_rar_rel)[, "Class"] != ""),
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Order"]) & tax_table(physeq_rar_rel)[, "Order"] != ""),
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Family"]) & tax_table(physeq_rar_rel)[, "Family"] != ""),
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Genus"]) & tax_table(physeq_rar_rel)[, "Genus"] != ""),
+    sum(!is.na(tax_table(physeq_rar_rel)[, "Species"]) & tax_table(physeq_rar_rel)[, "Species"] != "")
+  )
+)
+
+# Calculer les pourcentages
+tax_stats$Pourcentage <- round((tax_stats$ASV_assignees / tax_stats$Total_ASV) * 100, 2)
+
+# Afficher les résultats
+print(tax_stats)
+
+# Visualisation
+library(ggplot2)
+ggplot(tax_stats[-1, ], aes(x = factor(Niveau, levels = c("Phylum", "Class", "Order", "Family", "Genus", "Species")), 
+                           y = Pourcentage)) +
+  geom_col(fill = "steelblue", alpha = 0.7) +
+  geom_text(aes(label = paste0(ASV_assignees, " (", Pourcentage, "%)")), 
+            vjust = -0.5, size = 3) +
+  labs(title = "Pourcentage d'ASV assignées par niveau taxonomique",
+       x = "Niveau taxonomique",
+       y = "Pourcentage d'assignation (%)",
+       subtitle = paste("Total ASV:", ntaxa(physeq_rar_rel))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+## relative Abundance at Genus Level avec treemap
+
+```{r}
+# Version sans facettes pour éviter les problèmes
+library(treemapify)
+# Version sans facettes pour éviter les problèmes
+treemap_data_simple <- physeq_rar_rel %>%
+  psmelt() %>%
+  group_by(Station,Family, Class) %>%
+  summarize(Total_Abundance = sum(Abundance), .groups = "drop") %>%
+  filter(Total_Abundance > 0.001) %>%  # Filtrer les familles rares
+  arrange(desc(Total_Abundance)) %>%
+  slice_head(n = 30)  # Garder seulement les 20 plus abondantes
+
+ggplot(treemap_data_simple,aes(area=Total_Abundance,label=Family,fill=Class,subgroup=Class))+
+  treemapify::geom_treemap()+
+  treemapify::geom_treemap_subgroup_border() +
+  treemapify::geom_treemap_subgroup_text(place = "centre",
+                                         grow = T,
+                                         alpha = 0.5,
+                                         colour = "black",
+                                         fontface = "italic",
+                                         min.size = 0) +
+  treemapify::geom_treemap_text(colour = "white",
+                                place = "topleft",
+                                reflow = TRUE,
+                                size = 8) +
+    facet_wrap(~ Station) +  # Correction: enlever les guillemets
+  theme(legend.position = "none") +
+  ggtitle("Treemap des familles par station")
+```
+
+
+## Relative Abundance at Family Level
+
+```{r}
+family<-microbiome::aggregate_taxa(physeq_rar_rel, "Family")
+n_family <- length(unique(tax_table(family)[, "Family"]))
+print(paste("Nombre de familles:", n_family))
+
+# Option 1: Combinaison de plusieurs palettes RColorBrewer
+library(RColorBrewer)
+color_family <- c(
+  brewer.pal(12, "Set3"),
+  brewer.pal(8, "Set2"),
+  brewer.pal(9, "Set1"),
+  brewer.pal(8, "Pastel2"),
+  brewer.pal(9, "Pastel1"),
+```
+
+
+### Beta deversity Analysis
+
+
+```{r}
+#filtration des taxa rares (<10 dans au moins un échantillon)
+
+
+physeq_minus_rare <- phyloseq::filter_taxa(physeq, 
+                                           function(x) max(x) > 10, 
+                                           prune = TRUE)
+family_abund <- microbiome::aggregate_taxa(physeq_minus_rare, "Family")
+
+ # we first replace the zeros using
+ # the Count Zero Multiplicative approach
+tmp <- zCompositions::cmultRepl(family_abund@otu_table,
+                                method = "CZM",
+                                label = 0,
+                                z.warning = 1)
+
+# generate the centered log-ratio transformed. ASVs are in rows!!!!!
+physeq_clr_asv <- apply(tmp, 1, function(x) log(x) - mean(log(x)))
+
+
+```
+
+
+```{r}
+#create a new phyloseq object with CLR tranformed counts
+physeq_clr <- family_abund
+otu_table(physeq_clr) <- otu_table(physeq_clr_asv,
+                                   taxa_are_rows = FALSE)
+data.frame(physeq_clr@otu_table@.Data[1:5, 1:10])
+```
+
+## A modifié
+```{r}
+# #prepare the ASV table to add taxonomy
+# tax_CLR <-  as.data.frame(tax_table(physeq_clr)) # get taxnomic table
+# #concatene ASV with Family & Genus names
+# ASVname <- paste(rownames(tax_CLR), tax_CLR$Family, tax_CLR$Genus,sep="_")
+# #apply 
+#rownames(t(physeq_clr_asv)) <- ASVname
+p <- PCAtools::pca(physeq_clr_asv,
+                   metadata = data.frame(sample_data(physeq_clr)))
+PCAtools::screeplot(p, axisLabSize = 18, titleLabSize = 22)
+```

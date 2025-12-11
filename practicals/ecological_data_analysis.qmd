@@ -34,7 +34,7 @@ physeq<-readRDS(here::here("outputs", "dada2", "asv_table", "phyloseq_object.rds
 
 ```{r}
 #Chloroplast
-chloro=subset_taxa(physeq, Order=="Chloroplast")
+chloro=phyloseq::subset_taxa(physeq, Order=="Chloroplast")
 sample_sums(chloro@otu_table)
 
 apply(chloro@otu_table, 2, sum)
@@ -51,6 +51,8 @@ apply(mito@otu_table, 2, sum)
 # Retirer les chloroplastes et mitochondries
 physeq <- subset_taxa(physeq, !Order %in% "Chloroplast" & 
                              !Family %in% "Mitochondria")
+
+
 ```
 
 ```{r}
@@ -60,6 +62,7 @@ table(tax_table(physeq)[, "Phylum"])
 
 ```{r}
 physeq_rar <- phyloseq::rarefy_even_depth(physeq, rngseed = TRUE, sample.size = 15000)
+sample_sums(physeq_rar)
 ```
 
 
@@ -94,7 +97,7 @@ color <- c(
   brewer.pal(5, "Dark2")
 )
 # Prendre seulement le nombre nécessaire
-color <- color[1:n_phyla]
+color <- color[1:n_phyla] 
 
 microbiome::plot_composition(phylum, 
                            otu.sort = "abundance", 
@@ -206,7 +209,7 @@ ggplot(treemap_data_simple,aes(area=Total_Abundance,label=Family,fill=Class,subg
 ## Relative Abundance at Family Level
 
 ```{r}
-family<-microbiome::aggregate_taxa(physeq_rar_rel, "Family")
+family<-microbiome::aggregate_taxa(physeq_rar_rel, "Family") 
 n_family <- length(unique(tax_table(family)[, "Family"]))
 print(paste("Nombre de familles:", n_family))
 
@@ -324,6 +327,21 @@ psmelt(ble)[1:5, 1:10]
 ```
 
 ```{r}
+phyloseq::get_sample(ble, i = "Moraxellaceae")
+phyloseq::get_sample(ble, i = "Flavobacteriaceae")
+phyloseq::get_sample(ble, i = "Pirellulaceae")
+```
+
+:::warning
+Des OTUs affiliés aux Moraxellaceae (contenant notamment le genre Acinetobacter) et aux Pseudomonadales ont augmenté chez Acropora valida sous stress. De plus, des espèces de Pseudomonas ont augmenté chez le corail sensible Acropora millepora sous double stress.
+
+ Flavobacteriaceae : Cette famille fait partie des bactéries actives pathogènes qui augmentent en abondance sous stress d'acidification et/ou de réchauffement
+
+ Pirellulaceae : Les Pirellulales sont l'un des ordres bactériens abondants (représentant 10,8 % de l'abondance moyenne) identifiés dans les communautés microbiennes des algues corallines encroûtantes. Les phylotypes de Pirellulales sont également parmi les taxons communs et partagés entre plusieurs espèces de CCA connues.
+
+:::
+
+```{r}
 write.table(psmelt(ble),
             file = file.path(output_beta, "ble_familytop25_abundance.tsv"),
             quote = FALSE,
@@ -354,6 +372,9 @@ write.table(psmelt(contrebandier),
 ### ecological distance
 ```{r}
 source("R/beta_diversity.R")
+bleAll<- subset_samples(physeq_rar_rel, Station =="Ble")
+familyAll<- phyloseq::tax_glom(bleAll, taxrank = "Family")
+
 ```
 
 ```{r}
@@ -371,18 +392,34 @@ plist <- vector("list")
 
 for(i in dist_methods){
   # Calculate distance matrix
-  iDist <- phyloseq::distance(ble, method = i)
+  iDist <- phyloseq::distance(bleAll, method = i)
   # Calculate PCoA ordination
-  iMDS <- ordinate(ble, "MDS", distance = iDist)
+  iMDS <- ordinate(bleAll, "MDS", distance = iDist)
   ## Make plot. Don't carry over previous plot (if error, p will be blank)
   p <- NULL
   # Create plot, store as temp variable, p
-  p <- plot_ordination(ble, iMDS, color= "Geo")
+  p <- plot_ordination(bleAll, iMDS, color= "SampleType", shape="Treatment") +
+    geom_point(size=4) +
+    theme_minimal()
   # Add title to each plot
   p <- p + ggtitle(paste("MDS using distance method ", i, sep=""))
   # Save the graphic to list
   plist[[i]] = p 
 }
+```
+
+
+```{r}
+df <- plyr::ldply(plist, function(p) p$data)
+head(df)
+
+names(df)[1] <- "distance"
+
+ggplot(df, aes(Axis.1, Axis.2, color = SampleType, shape = date)) +
+  geom_point(size=3, alpha=0.5) +
+  theme_bw() +
+  facet_wrap(~distance, scales="free") +
+  ggtitle("PCoA (MDS) on various distance metrics")
 ```
 
 ```{r}
@@ -394,9 +431,11 @@ physeq_minus_rare <- phyloseq::filter_taxa(physeq,
                                            prune = TRUE)
 order_abund <- microbiome::aggregate_taxa(physeq_minus_rare, "Order")
 
+bleabund <- subset_samples(order_abund, Station =="Ble")
+
  # we first replace the zeros using
  # the Count Zero Multiplicative approach
-tmp <- zCompositions::cmultRepl(order_abund@otu_table,
+tmp <- zCompositions::cmultRepl(bleabund@otu_table,
                                 method = "CZM",
                                 label = 0,
                                 z.warning = 1)
@@ -410,7 +449,7 @@ physeq_clr_asv <- apply(tmp, 1, function(x) log(x) - mean(log(x)))
 
 ```{r}
 #create a new phyloseq object with CLR tranformed counts
-physeq_clr <- order_abund
+physeq_clr <- bleabund
 otu_table(physeq_clr) <- otu_table(physeq_clr_asv,
                                    taxa_are_rows = FALSE)
 data.frame(physeq_clr@otu_table@.Data[1:5, 1:10])
@@ -449,7 +488,7 @@ PCAtools::biplot(
   colLoadingsNames = 'red4',
   ntopLoadings = 3,
   lab = p$metadata$SampName,
-  colby = "Station",
+  colby = "Treatment",
   pointSize = 5,
   hline = 0, vline = 0,
   legendPosition = "right"
@@ -459,4 +498,9 @@ PCAtools::biplot(
 
 ```{r}
 metadata <- data.frame(sample_data(physeq_clr))
+```
+
+
+```{r}
+phyloseq::get_sample(ble, i = "Moraxcellacea")
 ```

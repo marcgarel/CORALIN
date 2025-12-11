@@ -104,6 +104,32 @@ microbiome::plot_composition(phylum,
                            group_by = "Station") +
   scale_fill_manual(values = color) +
   ggtitle("Relative Abundance at Phylum Level")
+
+ggplot(psmelt(phylum), aes(x = Sample, y = Abundance*100, fill = Phylum)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color) +
+  labs(title = "Relative Abundance at Phylum Level",
+       x = "Samples", 
+       y = "Relative Abundance",
+       fill = "Phylum") +
+  facet_grid(Station ~, scales = "free_x") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+
+phylum_df <- psmelt(phylum)
+
+ggplot(phylum_df, aes(x = Sample, y = Abundance*100, fill = Phylum)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color) +
+  facet_grid( ~ Station, scales = "free_x") +
+  labs(title = "Relative Abundance at Phylum Level",
+       x = "Samples", 
+       y = "Relative Abundance",
+       fill = "Phylum") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8),
+        strip.text = element_text(size = 10))
+
 ```
 
 ```{r}
@@ -184,6 +210,9 @@ family<-microbiome::aggregate_taxa(physeq_rar_rel, "Family")
 n_family <- length(unique(tax_table(family)[, "Family"]))
 print(paste("Nombre de familles:", n_family))
 
+fam_dominant <- microbiome::top_taxa(family, n = 25)
+fam_dominant<-prune_taxa(fam_dominant, family)
+
 # Option 1: Combinaison de plusieurs palettes RColorBrewer
 library(RColorBrewer)
 color_family <- c(
@@ -191,12 +220,101 @@ color_family <- c(
   brewer.pal(8, "Set2"),
   brewer.pal(9, "Set1"),
   brewer.pal(8, "Pastel2"),
-  brewer.pal(9, "Pastel1"),
+  brewer.pal(9, "Pastel1"))
+```
+
+```{r}
+plot_bar(fam_dominant, 
+         x = "Class", 
+         fill = "Family") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level") +
+  xlab("Samples") +
+  ylab("Relative Abundance") +
+  facet_grid(Station~Treatment) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(psmelt(fam_dominant), 
+       aes(x = Sample, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family") +
+  xlab("Classes") +
+  ylab("Relative Abundance") +
+  facet_grid(Treatment~Station, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(psmelt(fam_dominant), 
+       aes(x = Class, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family") +
+  xlab("Classes") +
+  ylab("Relative Abundance") +
+  facet_grid(Station~Treatment) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(psmelt(fam_dominant), 
+       aes(x = Class, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family") +
+  xlab("Samples") +
+  ylab("Relative Abundance") +
+  facet_grid(Station~Treatment) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+
+```
+
+### Subset samples 
+
+```{r}
+#ble 
+ble<- subset_samples(family, Station =="Ble")
+gamegou<- subset_samples(family, Station =="Gamegou")
+pierrebenoit<-  subset_samples(family, Station =="Pierre-Benoit")
+contrebandier<- subset_samples(family, Station =="Contrebandier")
+
 ```
 
 
 ### Beta deversity Analysis
 
+### ecological distance
+```{r}
+source("R/beta_diversity.R")
+```
+
+```{r}
+dist_methods <- unlist(distanceMethodList)
+data.frame(position = seq_along(dist_methods),
+           dist_methods)
+
+dist_methods <- dist_methods[c(1, 2, 10, 8)]
+dist_methods
+```
+
+```{r}
+#Loop through each distance method, save each plot to a list, called plist.
+plist <- vector("list")
+
+for(i in dist_methods){
+  # Calculate distance matrix
+  iDist <- phyloseq::distance(ble, method = i)
+  # Calculate PCoA ordination
+  iMDS <- ordinate(ble, "MDS", distance = iDist)
+  ## Make plot. Don't carry over previous plot (if error, p will be blank)
+  p <- NULL
+  # Create plot, store as temp variable, p
+  p <- plot_ordination(ble, iMDS, color= "Geo")
+  # Add title to each plot
+  p <- p + ggtitle(paste("MDS using distance method ", i, sep=""))
+  # Save the graphic to list
+  plist[[i]] = p 
+}
+```
 
 ```{r}
 #filtration des taxa rares (<10 dans au moins un échantillon)
@@ -205,11 +323,11 @@ color_family <- c(
 physeq_minus_rare <- phyloseq::filter_taxa(physeq, 
                                            function(x) max(x) > 10, 
                                            prune = TRUE)
-family_abund <- microbiome::aggregate_taxa(physeq_minus_rare, "Family")
+order_abund <- microbiome::aggregate_taxa(physeq_minus_rare, "Order")
 
  # we first replace the zeros using
  # the Count Zero Multiplicative approach
-tmp <- zCompositions::cmultRepl(family_abund@otu_table,
+tmp <- zCompositions::cmultRepl(order_abund@otu_table,
                                 method = "CZM",
                                 label = 0,
                                 z.warning = 1)
@@ -223,11 +341,13 @@ physeq_clr_asv <- apply(tmp, 1, function(x) log(x) - mean(log(x)))
 
 ```{r}
 #create a new phyloseq object with CLR tranformed counts
-physeq_clr <- family_abund
+physeq_clr <- order_abund
 otu_table(physeq_clr) <- otu_table(physeq_clr_asv,
                                    taxa_are_rows = FALSE)
 data.frame(physeq_clr@otu_table@.Data[1:5, 1:10])
 ```
+
+
 
 ## A modifié
 ```{r}
@@ -237,7 +357,37 @@ data.frame(physeq_clr@otu_table@.Data[1:5, 1:10])
 # ASVname <- paste(rownames(tax_CLR), tax_CLR$Family, tax_CLR$Genus,sep="_")
 # #apply 
 #rownames(t(physeq_clr_asv)) <- ASVname
-p <- PCAtools::pca(physeq_clr_asv,
+p <- PCAtools::pca(t(physeq_clr_asv),
                    metadata = data.frame(sample_data(physeq_clr)))
 PCAtools::screeplot(p, axisLabSize = 18, titleLabSize = 22)
+```
+
+
+```{r}
+# save.image("ecological_analysis_workspace.RData")
+# load("ecological_analysis_workspace.RData")
+```
+
+
+```{r}
+#Plotting the PCA
+PCAtools::biplot(
+  p,
+  # loadings parameters
+  showLoadings = TRUE,
+  lengthLoadingsArrowsFactor = 1.5,
+  sizeLoadingsNames = 3,
+  colLoadingsNames = 'red4',
+  ntopLoadings = 3,
+  lab = p$metadata$SampName,
+  colby = "Station",
+  pointSize = 5,
+  hline = 0, vline = 0,
+  legendPosition = "right"
+)
+```
+
+
+```{r}
+metadata <- data.frame(sample_data(physeq_clr))
 ```

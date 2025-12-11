@@ -452,6 +452,29 @@ saveRDS(physeq,
         file = file.path(input_dir, "phyloseq_object.rds"))
 ```
 
+### Add phylogenetic tree (optional)
+```{r}
+aln <- refseq(physeq) |>
+  DECIPHER::AlignSeqs(anchor = NA)
+
+#DECIPHER::BrowseSeqs(aln, highlight = 0)
+```
+
+```{r}
+phang_align <- as.matrix(aln) |> phangorn::phyDat(type = "DNA")
+dm <- phangorn::dist.ml(phang_align, model = "JC69")
+treeNJ <- phangorn::NJ(dm)
+treeNJ <- phangorn::midpoint(tree = treeNJ)
+```
+
+```{r}
+physeq <- phyloseq::merge_phyloseq(physeq,treeNJ)
+```
+
+```{r}
+saveRDS(physeq,
+        file = file.path(input_dir, "phyloseq_object.rds"))
+```
 ```{r}
 sessionInfo()
 ```

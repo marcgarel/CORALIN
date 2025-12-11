@@ -272,13 +272,82 @@ ggplot(psmelt(fam_dominant),
 
 ```{r}
 #ble 
-ble<- subset_samples(family, Station =="Ble")
-gamegou<- subset_samples(family, Station =="Gamegou")
-pierrebenoit<-  subset_samples(family, Station =="Pierre-Benoit")
-contrebandier<- subset_samples(family, Station =="Contrebandier")
+ble<- subset_samples(fam_dominant, Station =="Ble")
+gamegou<- subset_samples(fam_dominant, Station =="Gamegou")
+pierrebenoit<-  subset_samples(fam_dominant, Station =="Pierre-Benoit")
+contrebandier<- subset_samples(fam_dominant, Station =="Contrebandier")
 
 ```
 
+```{r}
+ggplot(psmelt(ble), 
+       aes(x = Sample, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family from ble") +
+  xlab("Samples") +
+  ylab("Relative Abundance") +
+  facet_grid(SampleType~Morphotype, scales = "free_x") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), labs = element_text(size = 14, angle = 45))
+
+ggplot(psmelt(gamegou), 
+       aes(x = Sample, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family from gamegou") +
+  xlab("Samples") +
+  ylab("Relative Abundance") +
+  facet_grid(SampleType~Morphotype) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), labs = element_text(size = 14, angle = 45))
+
+ggplot(psmelt(pierrebenoit), 
+       aes(x = Sample, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family from pierre benoit") +
+  xlab("Samples") +
+  ylab("Relative Abundance") +
+  facet_grid(SampleType~Morphotype) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), labs = element_text(size = 14, angle = 45))
+ggplot(psmelt(contrebandier), 
+       aes(x = Sample, y = Abundance*100, fill = Family)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = color_family[1:n_family]) +
+  ggtitle("Relative Abundance at Family Level of top 25 Family from contre bandier") +
+  xlab("Samples") +
+  ylab("Relative Abundance") +
+  facet_grid(SampleType~Morphotype) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), labs = element_text(size = 14, angle = 45))
+
+psmelt(ble)[1:5, 1:10]
+
+```
+
+```{r}
+write.table(psmelt(ble),
+            file = file.path(output_beta, "ble_familytop25_abundance.tsv"),
+            quote = FALSE,
+            sep = "\t",
+            row.names = FALSE)
+
+write.table(psmelt(gamegou),
+            file = file.path(output_beta, "gamegou_familytop25_abundance.tsv"),
+            quote = FALSE,
+            sep = "\t",
+            row.names = FALSE)
+write.table(psmelt(pierrebenoit),
+            file = file.path(output_beta, "pierrebenoit_familytop25_abundance.tsv"),
+            quote = FALSE,
+            sep = "\t",
+            row.names = FALSE)
+
+write.table(psmelt(contrebandier),
+            file = file.path(output_beta, "contrebandier_familytop25_abundance.tsv"),
+            quote = FALSE,
+            sep = "\t",
+            row.names = FALSE)
+
+```
 
 ### Beta deversity Analysis
 

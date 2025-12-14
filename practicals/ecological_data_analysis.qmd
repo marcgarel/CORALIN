@@ -337,7 +337,7 @@ Des OTUs affiliés aux Moraxellaceae (contenant notamment le genre Acinetobacter
 
  Flavobacteriaceae : Cette famille fait partie des bactéries actives pathogènes qui augmentent en abondance sous stress d'acidification et/ou de réchauffement
 
- Pirellulaceae : Les Pirellulales sont l'un des ordres bactériens abondants (représentant 10,8 % de l'abondance moyenne) identifiés dans les communautés microbiennes des algues corallines encroûtantes. Les phylotypes de Pirellulales sont également parmi les taxons communs et partagés entre plusieurs espèces de CCA connues.
+ Pirellulaceae : 
 
 :::
 
@@ -472,7 +472,7 @@ PCAtools::screeplot(p, axisLabSize = 18, titleLabSize = 22)
 
 
 ```{r}
-# save.image("ecological_analysis_workspace.RData")
+save.image("ecological_analysis_workspace.RData")
 # load("ecological_analysis_workspace.RData")
 ```
 
